@@ -29,7 +29,7 @@ mkdir -p "$CTX_DIR"
 # rsync panel — exclude: .git, node_modules, dist, config secrets, docs, tests, docker
 echo "[build] rsync panel → $CTX_DIR/panel/"
 rsync -a --delete \
-  --exclude .git --exclude node_modules --exclude web/node_modules \
+  --exclude .git --exclude node_modules \
   --exclude dist --exclude build --exclude coverage --exclude data \
   --exclude .claude --exclude .env --exclude '.env.*' \
   --exclude 'config/metadata-instances.json' --exclude 'config/*.yaml' --exclude 'config/*.yml' \

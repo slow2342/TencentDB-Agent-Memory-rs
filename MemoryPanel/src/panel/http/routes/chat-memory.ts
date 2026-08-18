@@ -17,7 +17,7 @@
  *   数据面层（/layer、/import）走 `deps.kernelHttp.postEnvelope('/v3/...', body, cred)`。
  *   面板层职责：拼装 caller header、聚合多次调用、权限/类型/借入 ≤ 2 校验。
  *
- * 12 endpoints（与前端 web/src/components/ChatMemoryPanel.tsx 3 tab 对应）：
+ * 12 endpoints（对应 Chat Memory 3 tab 业务）：
  *   POST /chat-memory/team-assets     团队 tab（visibility=team 且非 me owner）
  *   POST /chat-memory/agent-fixed     固定资产 tab（选中 agent 的 fixed_assets）
  *   POST /chat-memory/my-agents       我的资产分配 tab（我 owner 的 agent 列表）

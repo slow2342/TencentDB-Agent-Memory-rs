@@ -1,5 +1,3 @@
-import path from 'node:path';
-import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { requestLogger } from './middleware/request-logger.js';
 import type { PanelDeps } from '../panel-deps.js';
@@ -45,14 +43,6 @@ export function buildPanelApp(deps: PanelDeps): Hono {
       { code: 500, message: 'INTERNAL', request_id: c.get('reqId') ?? '', data: null },
       500,
     );
-  });
-
-  const distDir = deps.config.ui.distDir;
-  app.use('/*', serveStatic({ root: distDir }));
-  app.get('*', (c, next) => {
-    const p = c.req.path;
-    if (p.startsWith('/api/') || p === '/health') return next();
-    return serveStatic({ path: path.join(distDir, 'index.html') })(c, next);
   });
 
   return app;

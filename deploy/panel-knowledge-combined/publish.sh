@@ -30,7 +30,7 @@ command -v rsync >/dev/null || err "rsync required"
 
 # 1) Secret scan source code
 log "scanning source code..."
-(cd "$TMC_DIR" && bash "$SECRET_SCAN" src web/src config package.json)
+(cd "$TMC_DIR" && bash "$SECRET_SCAN" src config package.json)
 (cd "$KNOWLEDGE_DIR" && bash "$SECRET_SCAN" src .env.example package.json)
 
 # 2) Prepare build context

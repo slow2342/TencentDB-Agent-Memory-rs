@@ -1,12 +1,12 @@
 # Team Memory Control
 
-Team Memory Control 是一个无状态的团队记忆管理控制台，用于管理团队、用户、Agent、任务及其关联的 Skill、Wiki、Code Graph 和 Chat Memory 资产。
+Team Memory Control 是一个无状态的团队记忆管理控制台后端，用于管理团队、用户、Agent、任务及其关联的 Skill、Wiki、Code Graph 和 Chat Memory 资产。
 
 ## 项目定位
 
 Control 负责：
 
-- 提供 Web 管理界面和公开的 Control API；
+- 提供公开的 Control API；
 - 校验调用方凭证并转发授权请求；
 - 聚合元数据、记忆资产和知识资产；
 - 管理资产分配、绑定和展示。
@@ -16,9 +16,8 @@ Control 不保存服务端登录会话，也不维护本地用户数据库。业
 ## 技术栈
 
 - 后端：Node.js 22+、TypeScript、Hono、tsx
-- 前端：React 18、Vite、TypeScript、Tailwind CSS、Zustand
 - 测试：Vitest
-- 包管理：pnpm（后端）和 npm（前端）
+- 包管理：pnpm
 
 ## 目录结构
 
@@ -33,7 +32,6 @@ src/
     ├── kernel/               # 外部服务适配器
     └── startup/              # 启动任务
 
-web/                          # React 管理界面
 config/                       # 实例注册表示例与说明
 docker/                       # 容器构建文件
 docs/api/                     # 对外 API 契约
@@ -47,7 +45,6 @@ tests/                        # 单元测试与 E2E 测试
 
 - Node.js 22 或更高版本
 - pnpm
-- npm
 - 可访问的 Memory Gateway
 - 使用 Wiki 或 Code Graph 时，需要可访问的 Knowledge Service
 
@@ -55,9 +52,6 @@ tests/                        # 单元测试与 E2E 测试
 
 ```bash
 pnpm install
-cd web
-npm install
-cd ..
 ```
 
 ### 2. 准备配置
@@ -71,22 +65,13 @@ cp config/metadata-instances.example.json config/metadata-instances.json
 
 环境变量说明见 `.env.example`，实例注册表字段说明见 `config/metadata-instances.README.md`。
 
-### 3. 启动后端
+### 3. 启动
 
 ```bash
 pnpm dev
 ```
 
 默认监听 `http://127.0.0.1:8123`，健康检查为 `GET /health`。
-
-### 4. 启动前端
-
-```bash
-cd web
-npm run dev
-```
-
-浏览器访问 `http://127.0.0.1:5173`。开发服务器默认将 `/api/v1` 和 `/health` 转发到本地 Control。
 
 ## 常用命令
 
@@ -99,8 +84,6 @@ npm run dev
 | `pnpm generate:meta-openapi` | 生成 Meta OpenAPI 文档 |
 | `pnpm test:panel:e2e` | 运行 Panel Meta E2E |
 | `pnpm test:knowledge:e2e` | 运行 Knowledge E2E |
-| `cd web && npm run dev` | 启动前端开发服务器 |
-| `cd web && npm run build` | 构建前端到 `web/dist/` |
 | `bash scripts/secret-scan.sh` | 扫描敏感信息 |
 
 ## 公开 API
@@ -124,8 +107,8 @@ Control 的公开入口统一位于 `/api/v1`：
 
 ## 安全要求
 
-- `user_key` 是用户凭证，只能通过请求 Header 传递，不得写入日志、文档或前端静态资源。
-- 实例注册表中的 `api_key` 仅供服务端调用外部服务，不得返回浏览器。
+- `user_key` 是用户凭证，只能通过请求 Header 传递，不得写入日志、文档或静态资源。
+- 实例注册表中的 `api_key` 仅供服务端调用外部服务，不得返回给客户端。
 - `.env`、真实实例注册表、Smoke 环境文件、日志和测试报告不得提交。
 - 文档和示例只能使用 `example.com`、回环地址及明显的占位符。
 - 提交前运行 `bash scripts/secret-scan.sh --strict`。
@@ -134,7 +117,6 @@ Control 的公开入口统一位于 `/api/v1`：
 
 ## 文档
 
-- 前端开发：`web/README.md`
 - Meta API：`docs/api/meta-api.openapi.yaml`
 - Knowledge API：`docs/api/knowledge-panel-api.md`
 - Chat Memory API：`docs/api/chat-memory.md`
