@@ -71,7 +71,6 @@ docker run -d --name memory-hub \
 
 | 服务 | 地址 |
 |------|------|
-| Panel UI | `http://localhost:8125/` |
 | Panel API | `http://localhost:8125/api/v1/` |
 | KS Health | `http://localhost:8424/health` |
 | KS API | `http://localhost:8424/v3/` |

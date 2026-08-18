@@ -28,7 +28,7 @@ STRICT=0
 
 # 默认扫的目录（避免扫 node_modules / dist / .git 等）
 if [[ $# -eq 0 ]]; then
-  TARGETS=(src web/src tests config docker README.md package.json)
+  TARGETS=(src tests config docker README.md package.json)
 else
   TARGETS=("$@")
 fi

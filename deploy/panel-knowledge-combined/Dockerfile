@@ -18,21 +18,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # npm@10.9.8 有 arborist crash，升到 11
 RUN npm install -g npm@11 --no-audit --no-fund
 
-# ── Panel UI ─────────────────────────────────────────────────────────────────
-FROM builder-base AS panel-ui
-WORKDIR /build
-COPY panel/web/package*.json ./
-RUN npm install --no-audit --no-fund
-COPY panel/web/ ./
-RUN npm run build
-
 # ── Panel ────────────────────────────────────────────────────────────────────
 FROM builder-base AS panel
 WORKDIR /build
 COPY panel/package*.json ./
 RUN npm install --no-audit --no-fund
 COPY panel/ ./
-COPY --from=panel-ui /build/dist ./web/dist
 RUN npm run build
 
 # ── Knowledge ────────────────────────────────────────────────────────────────
@@ -78,7 +69,6 @@ ENV NODE_ENV=production \
 COPY --from=panel /build/dist /app/panel/dist
 COPY --from=panel /build/node_modules /app/panel/node_modules
 COPY --from=panel /build/package.json /app/panel/package.json
-COPY --from=panel /build/web/dist /app/panel/web/dist
 
 # Knowledge
 COPY --from=knowledge /build/dist /app/knowledge/dist

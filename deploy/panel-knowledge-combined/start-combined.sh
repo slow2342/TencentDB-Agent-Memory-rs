@@ -80,7 +80,6 @@ echo "[start] knowledge ready on :${KNOWLEDGE_PORT}"
 # Start Panel service
 cd /app/panel
 HOST=0.0.0.0 PORT="${PANEL_PORT}" \
-  UI_DIST_DIR=/app/panel/web/dist \
   METADATA_INSTANCES_CONFIG="$INSTANCES_FILE" \
   METADATA_REMOTE_TIMEOUT_MS="${METADATA_REMOTE_TIMEOUT_MS:-15000}" \
   KNOWLEDGE_SERVICE_URL="$KS_INTERNAL_URL" \
