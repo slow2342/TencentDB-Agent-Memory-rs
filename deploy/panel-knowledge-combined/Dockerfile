@@ -1,7 +1,10 @@
-FROM node:22-slim AS base
+# ==============================================================================
+# Memory Hub — Panel + Knowledge 合并镜像
+# ==============================================================================
 
-# apt 源默认走 Debian 官方，公网可直接构建。内网构建加速：
-#   docker build --build-arg APT_MIRROR=mirrors.tencent.com .
+# ── Builder base ─────────────────────────────────────────────────────────────
+FROM node:22-slim AS builder-base
+
 ARG APT_MIRROR=deb.debian.org
 RUN if [ "$APT_MIRROR" != "deb.debian.org" ]; then \
       sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
@@ -9,39 +12,44 @@ RUN if [ "$APT_MIRROR" != "deb.debian.org" ]; then \
     fi
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 make g++ git curl ca-certificates \
+      python3 make g++ git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# node:22-slim 自带 npm@10.9.8 有 arborist "edgesOut" crash（干净 `npm
-# install` 稳定报 `Cannot read properties of null (reading 'edgesOut')`）。
-# base 里升到 11，三个 builder stage 全部继承。
+# npm@10.9.8 有 arborist crash，升到 11
 RUN npm install -g npm@11 --no-audit --no-fund
 
-WORKDIR /app
-
-FROM base AS panel-ui-builder
-WORKDIR /build/panel-web
+# ── Panel UI ─────────────────────────────────────────────────────────────────
+FROM builder-base AS panel-ui
+WORKDIR /build
 COPY panel/web/package*.json ./
 RUN npm install --no-audit --no-fund
 COPY panel/web/ ./
 RUN npm run build
 
-FROM base AS panel-builder
-WORKDIR /build/panel
+# ── Panel ────────────────────────────────────────────────────────────────────
+FROM builder-base AS panel
+WORKDIR /build
 COPY panel/package*.json ./
 RUN npm install --no-audit --no-fund
 COPY panel/ ./
-COPY --from=panel-ui-builder /build/panel-web/dist ./web/dist
+COPY --from=panel-ui /build/dist ./web/dist
 RUN npm run build
 
-FROM base AS knowledge-builder
-WORKDIR /build/knowledge
+# ── Knowledge ────────────────────────────────────────────────────────────────
+FROM builder-base AS knowledge
+WORKDIR /build
 COPY knowledge/package*.json ./
 RUN npm install --no-audit --no-fund
 COPY knowledge/ ./
 RUN npm run build
 
-FROM base AS runtime
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM node:22-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 ENV NODE_ENV=production \
@@ -66,20 +74,19 @@ ENV NODE_ENV=production \
     LOG_LEVEL=info \
     LOG_FORMAT=json
 
-# runtime stage：只拷必需文件，不带源码/文档/测试/构建配置
-COPY --from=panel-builder /build/panel/dist /app/panel/dist
-COPY --from=panel-builder /build/panel/node_modules /app/panel/node_modules
-COPY --from=panel-builder /build/panel/package.json /app/panel/package.json
-COPY --from=panel-builder /build/panel/web/dist /app/panel/web/dist
+# Panel
+COPY --from=panel /build/dist /app/panel/dist
+COPY --from=panel /build/node_modules /app/panel/node_modules
+COPY --from=panel /build/package.json /app/panel/package.json
+COPY --from=panel /build/web/dist /app/panel/web/dist
 
-COPY --from=knowledge-builder /build/knowledge/dist /app/knowledge/dist
-COPY --from=knowledge-builder /build/knowledge/node_modules /app/knowledge/node_modules
-COPY --from=knowledge-builder /build/knowledge/package.json /app/knowledge/package.json
-# Swagger UI 从这个路径读 openapi.yaml（src/server.ts）
-COPY --from=knowledge-builder /build/knowledge/openapi.yaml /app/knowledge/openapi.yaml
+# Knowledge
+COPY --from=knowledge /build/dist /app/knowledge/dist
+COPY --from=knowledge /build/node_modules /app/knowledge/node_modules
+COPY --from=knowledge /build/package.json /app/knowledge/package.json
+COPY --from=knowledge /build/openapi.yaml /app/knowledge/openapi.yaml
 
 COPY start-combined.sh /usr/local/bin/start-combined.sh
-COPY README.md /app/README.md
 RUN chmod +x /usr/local/bin/start-combined.sh && mkdir -p /data/knowledge /app/panel/config
 
 EXPOSE 8125 8424
